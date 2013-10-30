@@ -22570,6 +22570,11 @@ clojure.string.escape = function escape(s, cmap) {
 goog.provide("canvas.canvas");
 goog.require("cljs.core");
 goog.require("clojure.string");
+canvas.canvas.rand_color = function rand_color() {
+  return[cljs.core.str("rgb("), cljs.core.str(clojure.string.join.call(null, ",", cljs.core.take.call(null, 3, cljs.core.repeatedly.call(null, function() {
+    return cljs.core.rand_int.call(null, 255)
+  })))), cljs.core.str(")")].join("")
+};
 canvas.canvas.canvas = document.getElementById("my-canvas");
 canvas.canvas.context = canvas.canvas.canvas.getContext("2d");
 canvas.canvas.input_state = cljs.core.atom.call(null, cljs.core.PersistentArrayMap.EMPTY);
@@ -22587,7 +22592,7 @@ canvas.canvas.looper = function looper(update, render, state) {
     var new_state = update.call(null, cljs.core.deref.call(null, canvas.canvas.input_state), state);
     render.call(null, new_state);
     return looper.call(null, update, render, new_state)
-  }, 16)
+  }, 10)
 };
 canvas.canvas.tick = function tick(last_input, state) {
   if(cljs.core.truth_((new cljs.core.Keyword("\ufdd0:mousedown")).call(null, last_input))) {
@@ -22604,8 +22609,8 @@ canvas.canvas.draw_rect = function draw_rect(state) {
   }
 };
 canvas.canvas.draw_rect_at = function draw_rect_at(x, y) {
-  canvas.canvas.context.fillStyle = "rgb(12,100,200)";
-  canvas.canvas.context.fillRect(x, y, 10, 10);
+  canvas.canvas.context.fillStyle = canvas.canvas.rand_color.call(null);
+  canvas.canvas.context.fillRect(x, y, 20, 20);
   return console.log([cljs.core.str(x), cljs.core.str(y)].join(""))
 };
 canvas.canvas.looper.call(null, canvas.canvas.tick, canvas.canvas.draw_rect, cljs.core.PersistentArrayMap.EMPTY);

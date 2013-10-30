@@ -1,6 +1,8 @@
 (ns canvas.canvas
   (:require [clojure.string :as string]))
 
+(defn rand-color []
+  (str "rgb(" (string/join "," (take 3 (repeatedly #(rand-int 255)))) ")"))
 
 (def canvas (.getElementById js/document "my-canvas")) 
 (def context (.getContext canvas "2d"))
@@ -22,18 +24,13 @@
  "mousemove"
  (fn [e] (swap! input-state assoc :x (.-clientX e) :y (.-clientY e))))
 
-(defmacro unless [test a]
-  (if (not test)
-     a
-     nil))
-
 (defn looper [update render state]
   (js/setTimeout
    (fn []
      (let [new-state (update @input-state state)]
        (render new-state)
        (looper update render new-state)))
-   16))
+   10))
 
 (defn tick [last-input state]
   (if (:mousedown last-input)
@@ -45,8 +42,8 @@
       (draw-rect-at (:x state) (:y state))))
 
 (defn draw-rect-at [x y]
-  (set! (. context -fillStyle) "rgb(12,100,200)")
-  (.fillRect context x y 10 10)
+  (set! (. context -fillStyle) (rand-color))
+  (.fillRect context x y 20 20)
   (.log js/console (str x y)))
 
 (looper tick draw-rect {})
