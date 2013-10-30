@@ -33,19 +33,18 @@
    10))
 
 
-
 (defn tick [last-input state]
   (if (:mousedown last-input)
     {:x (:x last-input) :y (:y last-input)}
     state))
 
-(defn draw-rect [state]
-  (if (not (empty? state))
-      (draw-rect-at (:x state) (:y state))))
-
 (defn draw-rect-at [x y]
   (set! (. context -fillStyle) (rand-color))
-  (.fillRect context x y 20 20)
-  (.log js/console (str x y)))
+  (.fillRect context x y 20 20))
+
+(defn draw-rect [state]
+  (if (not (empty? state))
+    (draw-rect-at (:x state) (:y state))))
+
 
 (looper tick draw-rect {})

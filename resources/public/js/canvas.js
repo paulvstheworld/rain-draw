@@ -22601,16 +22601,15 @@ canvas.canvas.tick = function tick(last_input, state) {
     return state
   }
 };
+canvas.canvas.draw_rect_at = function draw_rect_at(x, y) {
+  canvas.canvas.context.fillStyle = canvas.canvas.rand_color.call(null);
+  return canvas.canvas.context.fillRect(x, y, 20, 20)
+};
 canvas.canvas.draw_rect = function draw_rect(state) {
   if(!cljs.core.empty_QMARK_.call(null, state)) {
     return canvas.canvas.draw_rect_at.call(null, (new cljs.core.Keyword("\ufdd0:x")).call(null, state), (new cljs.core.Keyword("\ufdd0:y")).call(null, state))
   }else {
     return null
   }
-};
-canvas.canvas.draw_rect_at = function draw_rect_at(x, y) {
-  canvas.canvas.context.fillStyle = canvas.canvas.rand_color.call(null);
-  canvas.canvas.context.fillRect(x, y, 20, 20);
-  return console.log([cljs.core.str(x), cljs.core.str(y)].join(""))
 };
 canvas.canvas.looper.call(null, canvas.canvas.tick, canvas.canvas.draw_rect, cljs.core.PersistentArrayMap.EMPTY);
