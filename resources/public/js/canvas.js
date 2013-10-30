@@ -499,19 +499,6 @@ goog.base = function(me, opt_methodName, var_args) {
 goog.scope = function(fn) {
   fn.call(goog.global)
 };
-goog.provide("goog.debug.Error");
-goog.debug.Error = function(opt_msg) {
-  if(Error.captureStackTrace) {
-    Error.captureStackTrace(this, goog.debug.Error)
-  }else {
-    this.stack = (new Error).stack || ""
-  }
-  if(opt_msg) {
-    this.message = String(opt_msg)
-  }
-};
-goog.inherits(goog.debug.Error, Error);
-goog.debug.Error.prototype.name = "CustomError";
 goog.provide("goog.string");
 goog.provide("goog.string.Unicode");
 goog.string.Unicode = {NBSP:"\u00a0"};
@@ -952,6 +939,19 @@ goog.string.parseInt = function(value) {
   }
   return NaN
 };
+goog.provide("goog.debug.Error");
+goog.debug.Error = function(opt_msg) {
+  if(Error.captureStackTrace) {
+    Error.captureStackTrace(this, goog.debug.Error)
+  }else {
+    this.stack = (new Error).stack || ""
+  }
+  if(opt_msg) {
+    this.message = String(opt_msg)
+  }
+};
+goog.inherits(goog.debug.Error, Error);
+goog.debug.Error.prototype.name = "CustomError";
 goog.provide("goog.asserts");
 goog.provide("goog.asserts.AssertionError");
 goog.require("goog.debug.Error");
@@ -22476,12 +22476,12 @@ clojure.string.split = function() {
           if(cljs.core.truth_(temp__4090__auto__)) {
             var m = temp__4090__auto__;
             var index = s__$1.indexOf(m);
-            var G__6553 = s__$1.substring(index + cljs.core.count.call(null, m));
-            var G__6554 = limit__$1 - 1;
-            var G__6555 = cljs.core.conj.call(null, parts, s__$1.substring(0, index));
-            s__$1 = G__6553;
-            limit__$1 = G__6554;
-            parts = G__6555;
+            var G__4290 = s__$1.substring(index + cljs.core.count.call(null, m));
+            var G__4291 = limit__$1 - 1;
+            var G__4292 = cljs.core.conj.call(null, parts, s__$1.substring(0, index));
+            s__$1 = G__4290;
+            limit__$1 = G__4291;
+            parts = G__4292;
             continue
           }else {
             return cljs.core.conj.call(null, parts, s__$1)
@@ -22531,8 +22531,8 @@ clojure.string.trim_newline = function trim_newline(s) {
           return cljs.core._EQ_.call(null, ch, "\r")
         }
       }()) {
-        var G__6556 = index - 1;
-        index = G__6556;
+        var G__4293 = index - 1;
+        index = G__4293;
         continue
       }else {
         return s.substring(0, index)
@@ -22553,15 +22553,15 @@ clojure.string.escape = function escape(s, cmap) {
       return buffer.toString()
     }else {
       var ch = s.charAt(index);
-      var temp__4090__auto___6557 = cljs.core.get.call(null, cmap, ch);
-      if(cljs.core.truth_(temp__4090__auto___6557)) {
-        var replacement_6558 = temp__4090__auto___6557;
-        buffer.append([cljs.core.str(replacement_6558)].join(""))
+      var temp__4090__auto___4294 = cljs.core.get.call(null, cmap, ch);
+      if(cljs.core.truth_(temp__4090__auto___4294)) {
+        var replacement_4295 = temp__4090__auto___4294;
+        buffer.append([cljs.core.str(replacement_4295)].join(""))
       }else {
         buffer.append(ch)
       }
-      var G__6559 = index + 1;
-      index = G__6559;
+      var G__4296 = index + 1;
+      index = G__4296;
       continue
     }
     break
@@ -22570,41 +22570,36 @@ clojure.string.escape = function escape(s, cmap) {
 goog.provide("canvas.canvas");
 goog.require("cljs.core");
 goog.require("clojure.string");
-canvas.canvas.flag = false;
-canvas.canvas.BRUSH_SIZE = 10;
-canvas.canvas.rand_color = function rand_color() {
-  return[cljs.core.str("rgb("), cljs.core.str(clojure.string.join.call(null, ",", cljs.core.take.call(null, 3, cljs.core.repeatedly.call(null, function() {
-    return cljs.core.rand_int.call(null, 255)
-  })))), cljs.core.str(")")].join("")
+canvas.canvas.canvas = document.getElementById("my-canvas");
+canvas.canvas.context = canvas.canvas.canvas.context("2d");
+canvas.canvas.input_state = cljs.core.atom.call(null, cljs.core.PersistentArrayMap.EMPTY);
+"mousedown".addEventListener(function() {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", true))
+});
+"mouseup".addEventListener(function() {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", false))
+});
+"mousemove".addEventListener(function() {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", true))
+});
+canvas.canvas.looper = function looper(update, draw, state) {
+  return function() {
+    var new_state = update.call(null, cljs.core.deref.call(null, canvas.canvas.input_state), state);
+    draw.call(null, new_state);
+    return looper.call(null, update, draw, new_state)
+  }.setTimeout(16)
 };
-var canvas_7404__$1 = document.getElementById("my-canvas");
-var context_7405 = canvas_7404__$1.getContext("2d");
-var mouse_down_handler_7406 = function(canvas_7404__$1, context_7405) {
-  return function() {
-    canvas.canvas.flag = true
+canvas.canvas.tick = function tick(last_input, state) {
+  if(cljs.core.truth_((new cljs.core.Keyword("\ufdd0:mousedown")).call(null, last_input))) {
+    return cljs.core.PersistentArrayMap.fromArray(["\ufdd0:x", canvas.canvas.x + 1, "\ufdd0:y", canvas.canvas.y + 1], true)
+  }else {
+    return state
   }
-}(canvas_7404__$1, context_7405);
-var mouse_up_handler_7407 = function(canvas_7404__$1, context_7405, mouse_down_handler_7406) {
-  return function() {
-    canvas.canvas.flag = false
-  }
-}(canvas_7404__$1, context_7405, mouse_down_handler_7406);
-var mouse_move_handler_7408 = function(canvas_7404__$1, context_7405, mouse_down_handler_7406, mouse_up_handler_7407) {
-  return function(e) {
-    if(cljs.core._EQ_.call(null, canvas.canvas.flag, true)) {
-      context_7405.fillStyle = canvas.canvas.rand_color.call(null);
-      return context_7405.fillRect(e.clientX, e.clientY, canvas.canvas.BRUSH_SIZE, canvas.canvas.BRUSH_SIZE)
-    }else {
-      return null
-    }
-  }
-}(canvas_7404__$1, context_7405, mouse_down_handler_7406, mouse_up_handler_7407);
-canvas_7404__$1.addEventListener("mousedown", function(e) {
-  return mouse_down_handler_7406.call(null)
-});
-canvas_7404__$1.addEventListener("mouseup", function(e) {
-  return mouse_up_handler_7407.call(null)
-});
-canvas_7404__$1.addEventListener("mousemove", function(e) {
-  return mouse_move_handler_7408.call(null, e)
-});
+};
+canvas.canvas.draw_rect = function draw_rect(state) {
+  return canvas.canvas.draw_rect_at.call(null, (new cljs.core.Keyword("\ufdd0:x")).call(null, state), (new cljs.core.Keyword("\ufdd0:y")).call(null, state))
+};
+canvas.canvas.draw_rect_at = function draw_rect_at(x, y) {
+  return null
+};
+canvas.canvas.looper.call(null, canvas.canvas.tick, canvas.canvas.draw_rect, cljs.core.PersistentArrayMap.fromArray(["\ufdd0:x", 0, "\ufdd0:y", 0], true));

@@ -1,31 +1,43 @@
 (ns canvas.canvas
   (:require [clojure.string :as string]))
 
-(def flag false)
-(def BRUSH-SIZE 10)
 
-(defn rand-color []
-  (str "rgb(" (string/join "," (take 3 (repeatedly #(rand-int 255)))) ")"))
+(def canvas (.getElementById js/document "my-canvas")) 
+(def context (.context canvas "2d"))
 
-(let [canvas (.getElementById js/document
-                              "my-canvas")
-      context (.getContext canvas "2d")
-      mouse-down-handler (fn [] (do
-                          (def flag true)))
-      mouse-up-handler (fn [] (do
-                                (def flag false)))
-      mouse-move-handler (fn [e]
-                           (if (= flag true)
-                             (do
-                               (set! (. context -fillStyle) (rand-color))
-                               (.fillRect context
-                                          (.-clientX e)
-                                          (.-clientY e)
-                                          BRUSH-SIZE
-                                          BRUSH-SIZE))))]
+(def input-state (atom {})) ;; {:mousedown true/false}
 
-  (.addEventListener canvas "mousedown" (fn [e] (mouse-down-handler)))
-  (.addEventListener canvas "mouseup" (fn [e] (mouse-up-handler)))
-  (.addEventListener canvas "mousemove" (fn [e] (mouse-move-handler e))))
+(.addEventListener
+ "mousedown"
+ (fn [] (swap! input-state (assoc input-state :mousedown true))))
+
+(.addEventListener
+ "mouseup"
+ (fn [] (swap! input-state (assoc input-state :mousedown false))))
+
+(.addEventListener
+ "mousemove"
+ (fn [] (swap! input-state (assoc input-state :mousedown true))))
 
 
+(defn looper [update draw state]
+  (.setTimeout
+   (fn []
+     (let [new-state (update @input-state state)]
+       (draw new-state)
+       (looper update draw new-state)))
+   16))
+
+(defn tick [last-input state]
+  (if (:mousedown last-input)
+    {:x (+ x 1) :y (+ y 1)}
+    state))
+
+(defn draw-rect [state]
+  (draw-rect-at (:x state) (:y state)))
+
+(defn draw-rect-at [x y]
+
+  )
+
+(looper tick draw-rect {:x 0 :y 0})
