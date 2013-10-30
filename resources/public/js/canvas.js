@@ -499,6 +499,19 @@ goog.base = function(me, opt_methodName, var_args) {
 goog.scope = function(fn) {
   fn.call(goog.global)
 };
+goog.provide("goog.debug.Error");
+goog.debug.Error = function(opt_msg) {
+  if(Error.captureStackTrace) {
+    Error.captureStackTrace(this, goog.debug.Error)
+  }else {
+    this.stack = (new Error).stack || ""
+  }
+  if(opt_msg) {
+    this.message = String(opt_msg)
+  }
+};
+goog.inherits(goog.debug.Error, Error);
+goog.debug.Error.prototype.name = "CustomError";
 goog.provide("goog.string");
 goog.provide("goog.string.Unicode");
 goog.string.Unicode = {NBSP:"\u00a0"};
@@ -939,19 +952,6 @@ goog.string.parseInt = function(value) {
   }
   return NaN
 };
-goog.provide("goog.debug.Error");
-goog.debug.Error = function(opt_msg) {
-  if(Error.captureStackTrace) {
-    Error.captureStackTrace(this, goog.debug.Error)
-  }else {
-    this.stack = (new Error).stack || ""
-  }
-  if(opt_msg) {
-    this.message = String(opt_msg)
-  }
-};
-goog.inherits(goog.debug.Error, Error);
-goog.debug.Error.prototype.name = "CustomError";
 goog.provide("goog.asserts");
 goog.provide("goog.asserts.AssertionError");
 goog.require("goog.debug.Error");
@@ -22571,35 +22571,41 @@ goog.provide("canvas.canvas");
 goog.require("cljs.core");
 goog.require("clojure.string");
 canvas.canvas.canvas = document.getElementById("my-canvas");
-canvas.canvas.context = canvas.canvas.canvas.context("2d");
+canvas.canvas.context = canvas.canvas.canvas.getContext("2d");
 canvas.canvas.input_state = cljs.core.atom.call(null, cljs.core.PersistentArrayMap.EMPTY);
-"mousedown".addEventListener(function() {
-  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", true))
+canvas.canvas.canvas.addEventListener("mousedown", function() {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc, "\ufdd0:mousedown", true)
 });
-"mouseup".addEventListener(function() {
-  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", false))
+canvas.canvas.canvas.addEventListener("mouseup", function() {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc, "\ufdd0:mousedown", false)
 });
-"mousemove".addEventListener(function() {
-  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc.call(null, canvas.canvas.input_state, "\ufdd0:mousedown", true))
+canvas.canvas.canvas.addEventListener("mousemove", function(e) {
+  return cljs.core.swap_BANG_.call(null, canvas.canvas.input_state, cljs.core.assoc, "\ufdd0:x", e.clientX, "\ufdd0:y", e.clientY)
 });
-canvas.canvas.looper = function looper(update, draw, state) {
-  return function() {
+canvas.canvas.looper = function looper(update, render, state) {
+  return setTimeout(function() {
     var new_state = update.call(null, cljs.core.deref.call(null, canvas.canvas.input_state), state);
-    draw.call(null, new_state);
-    return looper.call(null, update, draw, new_state)
-  }.setTimeout(16)
+    render.call(null, new_state);
+    return looper.call(null, update, render, new_state)
+  }, 16)
 };
 canvas.canvas.tick = function tick(last_input, state) {
   if(cljs.core.truth_((new cljs.core.Keyword("\ufdd0:mousedown")).call(null, last_input))) {
-    return cljs.core.PersistentArrayMap.fromArray(["\ufdd0:x", canvas.canvas.x + 1, "\ufdd0:y", canvas.canvas.y + 1], true)
+    return cljs.core.PersistentArrayMap.fromArray(["\ufdd0:x", (new cljs.core.Keyword("\ufdd0:x")).call(null, last_input), "\ufdd0:y", (new cljs.core.Keyword("\ufdd0:y")).call(null, last_input)], true)
   }else {
     return state
   }
 };
 canvas.canvas.draw_rect = function draw_rect(state) {
-  return canvas.canvas.draw_rect_at.call(null, (new cljs.core.Keyword("\ufdd0:x")).call(null, state), (new cljs.core.Keyword("\ufdd0:y")).call(null, state))
+  if(!cljs.core.empty_QMARK_.call(null, state)) {
+    return canvas.canvas.draw_rect_at.call(null, (new cljs.core.Keyword("\ufdd0:x")).call(null, state), (new cljs.core.Keyword("\ufdd0:y")).call(null, state))
+  }else {
+    return null
+  }
 };
 canvas.canvas.draw_rect_at = function draw_rect_at(x, y) {
-  return null
+  canvas.canvas.context.fillStyle = "rgb(12,100,200)";
+  canvas.canvas.context.fillRect(x, y, 10, 10);
+  return console.log([cljs.core.str(x), cljs.core.str(y)].join(""))
 };
-canvas.canvas.looper.call(null, canvas.canvas.tick, canvas.canvas.draw_rect, cljs.core.PersistentArrayMap.fromArray(["\ufdd0:x", 0, "\ufdd0:y", 0], true));
+canvas.canvas.looper.call(null, canvas.canvas.tick, canvas.canvas.draw_rect, cljs.core.PersistentArrayMap.EMPTY);
