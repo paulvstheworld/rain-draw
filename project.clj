@@ -1,28 +1,24 @@
-(defproject modern-cljs "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+(defproject rain-draw "0.1.0-SNAPSHOT"
+  :description "FIXME: write this!"
   :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  ;; CLJ source code path
-  :source-paths ["src/clj"]
+  :repositories {"sonatype-staging"
+                 "https://oss.sonatype.org/content/groups/staging/"}
+
+
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-1847"]]
-
-  ;; lein-cljsbuild plugin to build a CLJS project
+                 [org.clojure/clojurescript "0.0-1978"]
+                 [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]]
+  
   :plugins [[lein-cljsbuild "0.3.4"]]
 
-  ;; cljsbuild options configuration
-  :cljsbuild {:builds
-              [{;; CLJS source code path
-                :source-paths ["src/cljs"]
+  :source-paths ["src"]
 
-                ;; Google Closure (CLS) options configuration
-                :compiler {;; CLS generated JS script filename
-                           :output-to "resources/public/js/canvas.js"
-
-                           ;; minimal JS optimization directive
-                           :optimizations :whitespace
-
-                           ;; generated JS code prettyfication
-                           :pretty-print true}}]})
+  :cljsbuild { 
+    :builds [{:id "rain-draw"
+              :source-paths ["src"]
+              :compiler {
+                :output-to "rain_draw.js"
+                :output-dir "out"
+                :optimizations :none
+                :source-map true}}]})
